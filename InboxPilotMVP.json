@@ -1,0 +1,709 @@
+{
+  "name": "InboxPilot – AI Email Operations Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cd4a067b-45fb-4de9-8efb-54e84f0b97c1",
+              "name": "message_id",
+              "value": "msg_001",
+              "type": "string"
+            },
+            {
+              "id": "99cfdce1-2960-494b-ba5f-861c9cd51053",
+              "name": "thread_id",
+              "value": "thread_001",
+              "type": "string"
+            },
+            {
+              "id": "28fab5c3-932c-4e07-8945-819a8725f9a1",
+              "name": "sender",
+              "value": "client@example.com",
+              "type": "string"
+            },
+            {
+              "id": "75afedbc-39b5-485d-916d-5cd6ece5521f",
+              "name": "subject",
+              "value": "Need Website Quote",
+              "type": "string"
+            },
+            {
+              "id": "cf53f9c0-a638-4c05-a559-9bb02438dc16",
+              "name": "body",
+              "value": "Hello, I'd like a quote for a website redesign.",
+              "type": "string"
+            },
+            {
+              "id": "2fd0c606-c33c-4601-855d-83a5da08f267",
+              "name": "received_at",
+              "value": "2026-07-12T10:00:00Z",
+              "type": "string"
+            },
+            {
+              "id": "05ef3f2a-ea6c-46bc-88a0-e44351b39464",
+              "name": "has_attachments",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        496
+      ],
+      "id": "d611036b-a598-4ad4-a418-6dbb170a30c6",
+      "name": "Normalize Email"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        624,
+        480
+      ],
+      "id": "8dd33b7f-73bd-41c5-a5fb-175597a90081",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        272
+      ],
+      "id": "ec1df002-7c9d-4bcf-8f09-195eef5051d9",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const item = $json;\nconst requiredFields = ['category', 'priority', 'urgency', 'summary', 'draftReply'];\nlet isValid = true;\n\nfor (const field of requiredFields) {\n  const value = item[field];\n  if (value === undefined || value === null || value === '') {\n    isValid = false;\n  }\n}\n\nreturn {\n  ...item,\n  aiSucceeded: isValid\n};"
+      },
+      "id": "0bc48476-7d85-4147-8a20-a267fc3cc66e",
+      "name": "Validate AI Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "p2-cond-1",
+              "leftValue": "={{ $json.aiSucceeded }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f8c0209d-afee-44df-be12-e110f387d897",
+      "name": "AI Output Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1312,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.category}}",
+                    "rightValue": "Sales",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "207e3bdd-394e-4b2d-be77-b2b9cea1b176"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Sales"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "711e58b1-c9a9-4299-a367-75d445215eca",
+                    "leftValue": "={{$json.category}}",
+                    "rightValue": "Support",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Support"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6109c6f5-8749-4642-b692-a9b420a42342",
+                    "leftValue": "={{$json.category}}",
+                    "rightValue": "Billing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Billing"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4ac561a6-040f-4f70-b5b1-7d9db8f0e492",
+                    "leftValue": "={{$json.category}}",
+                    "rightValue": "Internal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Internal"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1584,
+        608
+      ],
+      "id": "806a737e-72ac-4ec5-91ea-6dc2bdb14b56",
+      "name": "route by category"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        400
+      ],
+      "id": "a0130114-643d-4447-931d-3c9ba2fa253e",
+      "name": "ignore spam"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "689ed998-9c5f-4709-a57a-765e50ce49f8",
+              "leftValue": "={{$json.already_processed}}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c6c8bbaf-5737-4300-bf84-6f399fd41b0b",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        432,
+        496
+      ],
+      "id": "82b523e2-c84d-4e23-a211-06006ba0c904",
+      "name": "Already Processed?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cda217a6-94a2-4e6e-9397-4a58f39dae6a",
+              "leftValue": "={{$json.category}}",
+              "rightValue": "Sales",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "b15a9d8b-5e09-4e66-bba9-417b73350068",
+              "leftValue": "={{$json.priority}}",
+              "rightValue": "High",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2096,
+        592
+      ],
+      "id": "4c726e57-6e59-41a2-b292-972cd35ed0ce",
+      "name": "High Priority Sales?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "40c72197-5d41-4781-b02b-d9881bd03440",
+              "name": "alertTriggered",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "1b7d18c9-4a1c-4edd-b22c-36a1782cab0c",
+              "name": "alertRecipient",
+              "value": "Sales Manager",
+              "type": "string"
+            },
+            {
+              "id": "99fd6d8a-5197-4ec2-97d0-132ecda160e0",
+              "name": "alertPriority",
+              "value": "High",
+              "type": "string"
+            },
+            {
+              "id": "7d527b33-90ee-4a69-8732-16164c08f7f7",
+              "name": "alertMessage",
+              "value": "High-priority sales inquiry detected. Immediate follow-up recommended.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2256,
+        464
+      ],
+      "id": "b7782123-a292-4a60-a827-2a7d1dee39c1",
+      "name": "Priority Alert"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8e2f4f5c-f761-49bb-a0a2-7850bff796c9",
+              "name": "already_processed",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        496
+      ],
+      "id": "1b3dc27e-ff87-4be4-90ab-482630eecbbb",
+      "name": "Duplicate Check"
+    },
+    {
+      "parameters": {
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        656
+      ],
+      "id": "33091633-f571-4979-a772-6e5d149e82cf",
+      "name": "Continue Processing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "sim-1",
+              "name": "category",
+              "value": "Sales",
+              "type": "string"
+            },
+            {
+              "id": "sim-2",
+              "name": "priority",
+              "value": "High",
+              "type": "string"
+            },
+            {
+              "id": "sim-3",
+              "name": "urgency",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "sim-4",
+              "name": "summary",
+              "value": "Client is requesting a website redesign quote.",
+              "type": "string"
+            },
+            {
+              "id": "sim-5",
+              "name": "keyPoints",
+              "value": "={{ ['Needs redesign', 'Budget requested', 'Wants a meeting'] }}",
+              "type": "array"
+            },
+            {
+              "id": "sim-6",
+              "name": "draftReply",
+              "value": "Hi John,\n\nThank you for reaching out. We'd be happy to discuss your website redesign...",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "53e32952-1580-48fe-b2e5-a89c0603da40",
+      "name": "AI Analysis",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        832,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cdf13f20-3f3f-4a7e-a847-e23478a7ef54",
+              "name": "draftCreated",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "037d6344-2511-44cd-9396-d4a6336add79",
+              "name": "workflowStatus",
+              "value": "Completed",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1888,
+        592
+      ],
+      "id": "04f5849d-e575-4da5-a105-4655d0a607f9",
+      "name": "Draft Response Generator"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a946e1d5-a7c0-4a88-853b-51ecc94bd2c6",
+              "leftValue": "={{$json.category}}",
+              "rightValue": "Spam",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1440,
+        496
+      ],
+      "id": "86a796ed-8086-4eb8-ab53-217f87aa0471",
+      "name": "Spam Check"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Normalize Email": {
+      "main": [
+        [
+          {
+            "node": "Duplicate Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Normalize Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate AI Output": {
+      "main": [
+        [
+          {
+            "node": "AI Output Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Output Valid?": {
+      "main": [
+        [
+          {
+            "node": "Spam Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "route by category": {
+      "main": [
+        [
+          {
+            "node": "Draft Response Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Processed?": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Continue Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "High Priority Sales?": {
+      "main": [
+        [
+          {
+            "node": "Priority Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Duplicate Check": {
+      "main": [
+        [
+          {
+            "node": "Already Processed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Continue Processing": {
+      "main": [
+        [
+          {
+            "node": "AI Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Analysis": {
+      "main": [
+        [
+          {
+            "node": "Validate AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Draft Response Generator": {
+      "main": [
+        [
+          {
+            "node": "High Priority Sales?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spam Check": {
+      "main": [
+        [
+          {
+            "node": "ignore spam",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "route by category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "8343c526-96e3-4bb2-93b1-abfa6abb72a8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "82cf6be5c85752ec728ab42699ea9cc1ecb2c7920a56c20639edff5850493046"
+  },
+  "nodeGroups": [],
+  "id": "117l0h7lI82skwVn",
+  "tags": []
+}
